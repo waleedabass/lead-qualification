@@ -1,0 +1,119 @@
+// AI Lead Qualification and Speed-to-Lead System — data model
+// SQLite for local dev via a driver adapter (Prisma 7 requires one explicitly).
+// No native enum on sqlite, so status/type fields are String, validated at
+// the application layer — see src/lib/enums.ts.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Lead {
+  id             String   @id @default(cuid())
+  companyName    String
+  companyDomain  String
+  contactName    String
+  contactEmail   String
+  contactTitle   String?
+  message        String   // what they wrote in the demo-request form
+  source         String   @default("demo_request_form")
+  status         String   @default("new") // "new" | "enriched" | "routed" | "booked" | "lost"
+  createdAt      DateTime @default(now())
+
+  // Enrichment (mock firmographic provider)
+  employeeCountBand String?
+  industry          String?
+  techStack         String?  // JSON-encoded string array
+  hqLocation        String?
+  territory         String?  // derived from hqLocation
+
+  // Scoring
+  intentScore      Int?
+  scoreExplanation String?
+  scoreModel       String?
+
+  openRoles       OpenRole[]
+  routingDecision RoutingDecision?
+  crmSyncRecords  CrmSyncRecord[]
+  meeting         Meeting?
+  followUps       FollowUp[]
+
+  @@index([status])
+  @@index([territory])
+}
+
+model OpenRole {
+  id       String @id @default(cuid())
+  leadId   String
+  lead     Lead   @relation(fields: [leadId], references: [id])
+
+  title    String
+  url      String
+  source   String // "greenhouse" | "lever"
+
+  @@index([leadId])
+}
+
+model AccountExecutive {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  territory String   // "US-West" | "US-East" | "EMEA" | "APAC"
+  createdAt DateTime @default(now())
+
+  routingDecisions RoutingDecision[]
+}
+
+model RoutingDecision {
+  id       String @id @default(cuid())
+  leadId   String @unique
+  lead     Lead   @relation(fields: [leadId], references: [id])
+  aeId     String
+  ae       AccountExecutive @relation(fields: [aeId], references: [id])
+
+  rule      String   // short machine description of which rule fired
+  reasoning String
+  createdAt DateTime @default(now())
+}
+
+model CrmSyncRecord {
+  id         String   @id @default(cuid())
+  leadId     String
+  lead       Lead     @relation(fields: [leadId], references: [id])
+
+  provider   String   // "hubspot" | "log_only"
+  externalId String?
+  status     String   @default("synced") // "synced" | "failed"
+  createdAt  DateTime @default(now())
+
+  @@index([leadId])
+}
+
+model Meeting {
+  id          String   @id @default(cuid())
+  leadId      String   @unique
+  lead        Lead     @relation(fields: [leadId], references: [id])
+
+  scheduledAt DateTime
+  bookedVia   String   @default("cal.com")
+  createdAt   DateTime @default(now())
+}
+
+model FollowUp {
+  id           String   @id @default(cuid())
+  leadId       String
+  lead         Lead     @relation(fields: [leadId], references: [id])
+
+  channel      String   @default("email") // "email"
+  content      String
+  status       String   @default("pending") // "pending" | "sent_log_only"
+  scheduledFor DateTime
+  sentAt       DateTime?
+  createdAt    DateTime @default(now())
+
+  @@index([leadId])
+}
