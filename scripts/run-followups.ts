@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { PrismaClient } from "../src/generated/prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaLibSql } from "@prisma/adapter-libsql";
 
 // Finds leads that were routed to an AE but never booked a meeting, and are
 // older than FOLLOWUP_DELAY_DAYS. There's no real email-sending integration
@@ -11,8 +11,12 @@ import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 
 const FOLLOWUP_DELAY_DAYS = Number(process.env.FOLLOWUP_DELAY_DAYS ?? 2);
 
-const sqliteUrl = (process.env.DATABASE_URL ?? "file:./dev.db").replace(/^file:/, "");
-const db = new PrismaClient({ adapter: new PrismaBetterSqlite3({ url: sqliteUrl }) });
+const db = new PrismaClient({
+  adapter: new PrismaLibSql({
+    url: process.env.DATABASE_URL ?? "file:./dev.db",
+    authToken: process.env.DATABASE_AUTH_TOKEN,
+  }),
+});
 
 function draftFollowUp(lead: { companyName: string; contactName: string; intentScore: number | null }, aeName: string): string {
   return (
