@@ -94,13 +94,11 @@ export function getCompanyEnrichmentProvider(): CompanyEnrichmentProvider {
   return mockCompanyEnrichmentProvider;
 }
 
-export function territoryFromLocation(hqLocation: string): string {
-  const loc = hqLocation.toLowerCase();
-  if (loc.includes("london") || loc.includes("berlin") || loc.includes("uk") || loc.includes("de")) return "EMEA";
-  if (loc.includes("singapore") || loc.includes("tokyo") || loc.includes("sydney")) return "APAC";
-  if (loc.includes("toronto")) return "US-East"; // nearest NA territory
-  // US: rough coast split by known city names in our seed/synthetic sets.
-  const westCities = ["san francisco", "austin", "seattle", "los angeles"];
-  if (westCities.some((c) => loc.includes(c))) return "US-West";
-  return "US-East";
+export function territoryFromLocation(hqLocation: string): string | null {
+  const loc=hqLocation.trim().toLowerCase();
+  if(/\b(london|berlin|united kingdom|germany|uk|de)\b/.test(loc))return 'EMEA';
+  if(/\b(singapore|tokyo|sydney)\b/.test(loc))return 'APAC';
+  if(/\b(san francisco|austin|seattle|los angeles)\b/.test(loc))return 'US-West';
+  if(/\b(new york|boston|toronto|united states|us|usa)\b/.test(loc))return 'US-East';
+  return null;
 }

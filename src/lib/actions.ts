@@ -1,5 +1,7 @@
 "use server";
 
+import { requireLiveAccess } from "@/lib/live-access";
+
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
@@ -12,6 +14,7 @@ import { postToSlack } from "@/lib/notify/slack";
 import { getCrmProvider } from "@/lib/crm";
 
 export async function submitDemoRequestAction(formData: FormData): Promise<void> {
+  await requireLiveAccess();
   const companyName = String(formData.get("companyName") ?? "").trim();
   const companyDomain = String(formData.get("companyDomain") ?? "").trim();
   const contactName = String(formData.get("contactName") ?? "").trim();
@@ -36,6 +39,7 @@ export async function submitDemoRequestAction(formData: FormData): Promise<void>
 // Separated from the form action so a "reprocess" button (e.g. after a
 // failed enrichment) can call the same pipeline without resubmitting the form.
 export async function processLead(leadId: string): Promise<void> {
+  await requireLiveAccess();
   const lead = await db.lead.findUniqueOrThrow({ where: { id: leadId } });
 
   // 1. Enrichment — real open-role scan (Greenhouse/Lever) + mock firmographic data.
@@ -67,7 +71,7 @@ export async function processLead(leadId: string): Promise<void> {
     employeeCountBand: firmographics.employeeCountBand,
     openRoleCount: openRoles.length,
     techStack: firmographics.techStack,
-    territoryKnown: true,
+    territoryKnown: Boolean(territory),
     message: lead.message,
   });
 
@@ -122,6 +126,7 @@ export async function processLead(leadId: string): Promise<void> {
 // is wired up — see /api/webhooks/calcom for that. Same pattern as
 // signal-outbound-engine's bookMeetingAction.
 export async function bookMeetingAction(leadId: string, formData: FormData): Promise<void> {
+  await requireLiveAccess();
   const scheduledAtISO = String(formData.get("scheduledAt") ?? "");
   if (!scheduledAtISO) throw new Error("A meeting time is required.");
 

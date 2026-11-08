@@ -46,8 +46,8 @@ export function createOpenRouterExplainProvider(apiKey: string): ExplainProvider
           headers: {
             Authorization: `Bearer ${apiKey}`,
             "Content-Type": "application/json",
-            "HTTP-Referer": "https://arcautomations.in",
-            "X-Title": "ARC Automations Lead Qualification",
+            "HTTP-Referer": "https://pixelaisolutions.com",
+            "X-Title": "Pixel AI Solutions Lead Qualification",
           },
           body,
         });

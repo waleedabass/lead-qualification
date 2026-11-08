@@ -157,3 +157,10 @@ An average lead-routing tool assigns leads round-robin and calls it done. This s
 3. Show the Slack alert firing and the CRM sync happening.
 4. Open the lead journey page — the single transparent view of the whole story.
 5. Show the routing table — a different territory routes to a different rep.
+
+
+## Public Pixel sample
+
+The public entry and `/demo` run editable, browser-isolated sample workflows. No live email, payment, CRM update or paid AI request is made. Records reset on reload. Existing provider integrations remain available behind explicit private access. Set `ENABLE_LIVE_DEMO=true`, `DATABASE_URL` and a private `PIXEL_LIVE_ACCESS_TOKEN` of at least 32 characters; authenticate internal requests using the `pixel-live-access` cookie or a Bearer header. Keep provider keys server-side. Public POSTs and APIs are blocked. Do not enable integration mode for anonymous visitors.
+
+Run `npm ci`, `npm test`, `npm run lint`, and `npm run build`. Production uses the linked Vercel project.

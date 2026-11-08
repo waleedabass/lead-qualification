@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import { NextResponse } from "next/server";
+import { requireLiveAccess } from "@/lib/live-access";
 import { db } from "@/lib/db";
 
 // Cal.com webhook — same pattern as signal-outbound-engine's. Add one at
@@ -8,6 +9,8 @@ import { db } from "@/lib/db";
 // BOOKING_CREATED. If a signing secret is configured there, set
 // CALCOM_WEBHOOK_SECRET to the same value to verify X-Cal-Signature-256.
 export async function POST(request: Request) {
+  try { await requireLiveAccess(); }
+  catch { return NextResponse.json({ error: "Private integration access required" }, { status: 403 }); }
   const rawBody = await request.text();
 
   const secret = process.env.CALCOM_WEBHOOK_SECRET;
